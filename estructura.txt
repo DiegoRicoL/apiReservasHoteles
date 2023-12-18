@@ -1,0 +1,31 @@
+Conexion => Conexion a base de datos persistida por el programa
+getConnection();
+
+Hotel.php => Metodos de manejo sobre los hoteles
+getHoteles(); 
+insertHotel(); //Admin
+deleteHoteles(); //Admin
+updateHotel(); //Admin
+
+Habitacion.php => Metodos de manejo sobre las habitaciones
+getHabitaciones();
+insertHabitacion(); //Admin
+deleteHabitaciones(); //Admin
+updateHabitacion(); //Admin
+
+Cliente.php => Metodos de manejo sobre los clientes
+getClientes(); //Admin
+insertClientes();
+deleteCliente(); //En un entorno real le pasarías el id del usuario de la sesion actual
+updateClientes(); //En un entorno real le pasarías el id del usuario de la sesion actual
+
+Opinion.php => Metodos de manejo sobre las opiniones
+getOpinion();
+insertOpinion();
+deleteOpinion(); //En un entorno real solo podría borrar el usuario que la ha creado
+updateOpinion(); //En un entorno real solo podría modificar el usuario que la ha creado
+
+Usuarios.php => Metodos de manejo sobre los usuarios
+registrarUsuario();
+deleteUsuario(); //En un entorno real le pasarías el id del usuario de la sesion actual
+updateUsuario(); //En un entorno real le pasarías el id del usuario de la sesion actual

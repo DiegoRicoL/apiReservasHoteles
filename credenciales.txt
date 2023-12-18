@@ -1,0 +1,9 @@
+Nombre: PacoNoAdmin
+Contraseña: 1234
+
+Acceso: Metodos Get y aquellos que no requieran autentificación (Clientes y Opiniones)
+-------------------
+Nombre: DiegoSiAdmin
+Contraseña: 123469
+
+Acceso: Todos los metodos

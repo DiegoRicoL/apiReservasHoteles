@@ -1,0 +1,81 @@
+HOTEL:
+	INSERT:
+	{
+	   "usuario": {
+	      "id": "3"
+	   },
+	   "hotel": {
+	      "nombre": "Only YOU 2",
+	      "ubicacion": "Valencia"
+	   }
+  	}
+
+	UPDATE:
+	{
+	   "usuario": {
+	      "id": "3"
+   	   },
+	   "hotel": {
+	      "id": 2,
+	      "nombre": "Only YOU 2 Updated",
+	      "valoracion": "8", //Esto es un campo calculado
+	      "ubicacion": "Valencia"
+	   }
+	}
+
+	DELETE:
+	{
+	   "usuario": {
+	      "id": "1"
+	   },
+	   "hotel": {
+	      "id": 2
+	   }
+	}
+
+
+Inserción Habitación:
+{
+  "usuario": {
+    "nombre": "PacoNoAdmin",
+    "contrasena": "1234" 
+  },
+  "habitacion": {
+    "nombre": "Only YOU",
+    "tipo": "Suite",
+    "camas": "2"
+  }
+}
+
+
+update:
+{
+  "usuario": {
+    "nombre": "PacoNoAdmin",
+    "contrasena": "1234" 
+  },
+  "habitacion":{
+	"id": "1",
+	"update": {
+		"camas": 3
+	}
+
+Inserción Cliente:
+{
+  "cliente": {
+    "nombre": "Paco",
+    "apellidos": "Jose Manuel Gutierrez",
+    "telefono": "696969692",
+    "mail": "tuxulako69@hotmail.com"
+  }
+}
+
+Inserción Opinión:
+{
+  "opinion": {
+    "idCliente": "1",
+    "idHabitacion": "1",
+    "nota": "6.9",
+    "texto": "baya fokin chit brof, me giñé en la ventana brof"
+  }
+}
