@@ -42,6 +42,7 @@ function updateHabitaciones($conex)
     global $arrayTipoHabitaciones;
     $ok = false;
     $input = json_decode(file_get_contents('php://input'), true);
+    $idUsuario = $input['idUsuario'];
     $id = $input['id'];
     $ocupado = $input['ocupado'];
     $tipo = $input['tipo'];
@@ -51,6 +52,17 @@ function updateHabitaciones($conex)
         if ($tipo == $arrayTipoHabitaciones[$i]) {
             $ok = true;
         }
+    }
+    $sql = "SELECT * from usuarios where id = ?";
+    $result = $conex->prepare($sql);
+    $result->bindParam(1, $idUsuario);
+    $result->execute();
+    $row = $result->fetch(PDO::FETCH_ASSOC);
+    if ($row["Admin"] == "1") {
+        $ok = true;
+    }else{
+        $ok = false;
+        echo json_encode(array('message' => 'No tienes permisos para actualizar habitaciones'));
     }
     if ($ok) {
         $insertHabita = $conex->prepare("UPDATE habitaciones SET Ocupado = ?, Tipo = ?, Camas = ? WHERE id = ?");
@@ -76,6 +88,7 @@ function insertHabitaciones($conex)
     global $conex;
     global $arrayTipoHabitaciones;
     $input = json_decode(file_get_contents('php://input'), true);
+    $idUsuario = $input['idUsuario'];
     $hotel = $input['hotel'];
     $ocupado = $input['ocupado'];
     $tipo = $input['tipo'];
@@ -89,8 +102,19 @@ function insertHabitaciones($conex)
         }
     }
 
+    $sql = "SELECT * from usuarios where id = ?";
+    $result = $conex->prepare($sql);
+    $result->bindParam(1, $idUsuario);
+    $result->execute();
+    $row = $result->fetch(PDO::FETCH_ASSOC);
+    if ($row["Admin"] == "1") {
+        $ok = true;
+    }else{
+        $ok = false;
+        echo json_encode(array('message' => 'No tienes permisos para actualizar habitaciones'));
+    }
+
     if ($ok) {
-       
         $insertHabita = $conex->prepare("INSERT INTO habitaciones (Hotel, Ocupado, Tipo, Camas) VALUES (?, ?, ?, ?)");
         $insertHabita->bindParam(1, $hotel);
         $insertHabita->bindParam(2, $ocupado);
@@ -112,9 +136,22 @@ function insertHabitaciones($conex)
 function deleteHabitaciones($conex)
 {
     $input = json_decode(file_get_contents('php://input'), true);
+    $idUsuario = $input['idUsuario'];
     $id = $input['id'];
     $ok = true;
     global $conex;
+
+    $sql = "SELECT * from usuarios where id = ?";
+    $result = $conex->prepare($sql);
+    $result->bindParam(1, $idUsuario);
+    $result->execute();
+    $row = $result->fetch(PDO::FETCH_ASSOC);
+    if ($row["Admin"] == "1") {
+        $ok = true;
+    }else{
+        $ok = false;
+        echo json_encode(array('message' => 'No tienes permisos para actualizar habitaciones'));
+    }
     if ($ok) {
        
         $insertHabita = $conex->prepare("DELETE FROM habitaciones WHERE id = ?");
