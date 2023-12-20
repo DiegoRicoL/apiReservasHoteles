@@ -47,16 +47,38 @@ function getClientes($conex)
 
 }
 
-function insertCliente($conex)
+function insertCliente($conex, $cliente = array())
 {
-    $input = json_decode(file_get_contents('php://input'), true);
+    if (empty($cliente)) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $cliente = $input["cliente"];
+    }
 
-    $cliente = $input["cliente"];
+    $result = $conex->prepare("INSERT INTO clientes (nombre, apellidos, telefono, email) VALUES (?,?,?,?);");
+    $result->bindParam(1, $cliente["nombre"]);
+    $result->bindParam(2, $cliente["apellidos"]);
+    $result->bindParam(3, $cliente["telefono"]);
+    $result->bindParam(4, $cliente["email"]);
 
-    $sql = "INSERT INTO clientes (nombre, apellidos, telefono, email) VALUES (?,?,?,?);";
-    $result = $conex->query($sql);
-    $result->execute([$cliente["nombre"], $cliente["apellidos"], $cliente["telefono"], $cliente["email"]]);
-    echo json_encode($result);
+    $conex->beginTransaction();
+    if ($result->execute() != 0) {
+        $conex->commit();
+        
+        $result = $conex->prepare("SELECT * FROM clientes WHERE nombre = ? AND apellidos = ? AND telefono = ? AND email = ?;");
+        $result->bindParam(1, $cliente["nombre"]);
+        $result->bindParam(2, $cliente["apellidos"]);
+        $result->bindParam(3, $cliente["telefono"]);
+        $result->bindParam(4, $cliente["email"]);
+
+        $result->execute();
+        $cliente = $result->fetch(PDO::FETCH_ASSOC);
+        echo json_encode(array("success" => "Cliente insertado correctamente", "cliente" => $cliente));
+    } else {
+        $conex->rollBack();
+        echo json_encode(array("error" => "Error al insertar el hotel"));
+    }
+
+    return json_encode($result);
 }
 
 function updateCliente($conex)
@@ -66,11 +88,11 @@ function updateCliente($conex)
     $usuario = $input['usuario'];
     $cliente = $input["cliente"];
 
-    if(($adminStatus = getAdminStatusUser($conex, $usuario)) == false){
+    if (($adminStatus = getAdminStatusUser($conex, $usuario)) == false) {
         echo json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
         return;
     } else {
-        if($adminStatus["admin"] == 1){
+        if ($adminStatus["admin"] == 1) {
             $sql = "UPDATE clientes SET nombre = ?, apellidos = ?, telefono = ?, email = ? WHERE id = ?;";
             $result = $conex->query($sql);
             $result->execute([$cliente["nombre"], $cliente["apellidos"], $cliente["telefono"], $cliente["email"], $cliente["id"]]);
@@ -88,11 +110,11 @@ function deleteCliente($conex)
     $usuario = $input['usuario'];
     $cliente = $input["cliente"];
 
-    if(($adminStatus = getAdminStatusUser($conex, $usuario)) == false){
+    if (($adminStatus = getAdminStatusUser($conex, $usuario)) == false) {
         echo json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
         return;
     } else {
-        if($adminStatus["admin"] == 1){
+        if ($adminStatus["admin"] == 1) {
             $sql = "DELETE FROM clientes WHERE id = ?;";
             $result = $conex->query($sql);
             $result->execute([$cliente["id"]]);

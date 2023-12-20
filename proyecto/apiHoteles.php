@@ -41,16 +41,10 @@ function insertHotel($conex){
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
-    $getAdminStatusUser = "SELECT admin FROM usuarios WHERE id = ". $usuario["id"] . ";";
-    $result = $conex->query($getAdminStatusUser);
-
-    if($result == false){
+    if(($adminStatus = getAdminStatusUser($conex, $usuario)) == false){
         echo json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
         return;
     } else {
-        $adminStatus = $result->fetch(PDO::FETCH_ASSOC);
-        echo json_encode($adminStatus);
-
         if($adminStatus["admin"] == 1){
             
             $insertHotel = $conex->prepare("INSERT INTO hoteles (nombre, ubicacion) VALUES (:nombre, :ubicacion);");
@@ -82,16 +76,10 @@ function updateHotel($conex){
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
-    $getAdminStatusUser = "SELECT admin FROM usuarios WHERE id = ". $usuario["id"] . ";";
-    $result = $conex->query($getAdminStatusUser);
-
-    if($result == false){
+    if(($adminStatus = getAdminStatusUser($conex, $usuario)) == false){
         echo json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
         return;
     } else {
-        $adminStatus = $result->fetch(PDO::FETCH_ASSOC);
-        echo json_encode($adminStatus);
-
         if($adminStatus["admin"] == 1){
             
             $updateHotel = $conex->prepare("UPDATE hoteles SET nombre = :nombre, valoracion = :valoracion, ubicacion = :ubicacion WHERE id = :id;");
@@ -123,16 +111,10 @@ function deleteById($conex){
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
-    $getAdminStatusUser = "SELECT admin FROM usuarios WHERE id = ". $usuario["id"] . ";";
-    $result = $conex->query($getAdminStatusUser);
-
-    if($result == false){
+    if(($adminStatus = getAdminStatusUser($conex, $usuario)) == false){
         echo json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
         return;
     } else {
-        $adminStatus = $result->fetch(PDO::FETCH_ASSOC);
-        echo json_encode($adminStatus);
-
         if($adminStatus["admin"] == 1){
             
             $deleteHotel = $conex->prepare("DELETE FROM hoteles WHERE id = :id;");
