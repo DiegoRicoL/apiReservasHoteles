@@ -32,12 +32,18 @@ function getHoteles($conex){
         $hoteles[] = $row;
     }
     echo json_encode($hoteles);
+    return;
 
 }
 
 function insertHotel($conex){
     $input = json_decode(file_get_contents('php://input'), true);
     
+    if(!isset($input["usuario"]) || !isset($input["hotel"])){
+        echo json_encode(array("error" => "Faltan campos por rellenar"));
+        return;
+    }
+
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
@@ -47,6 +53,11 @@ function insertHotel($conex){
     } else {
         if($adminStatus["admin"] == 1){
             
+            if(empty($hotel["nombre"]) || empty($hotel["ubicacion"])){
+                echo json_encode(array("error" => "Faltan campos por rellenar"));
+                return;
+            }
+
             $insertHotel = $conex->prepare("INSERT INTO hoteles (nombre, ubicacion) VALUES (:nombre, :ubicacion);");
 
             $insertHotel->bindParam(":nombre", $hotel["nombre"]);
@@ -56,9 +67,11 @@ function insertHotel($conex){
             if($insertHotel->execute() != 0){
                 $conex->commit();
                 echo json_encode(array("success" => "Hotel insertado correctamente"));
+                return;
             } else {
                 $conex->rollBack();
                 echo json_encode(array("error" => "Error al insertar el hotel"));
+                return;
             }
 
         } else {
@@ -73,6 +86,11 @@ function insertHotel($conex){
 function updateHotel($conex){
     $input = json_decode(file_get_contents('php://input'), true);
     
+    if(!isset($input["usuario"]) || !isset($input["hotel"])){
+        echo json_encode(array("error" => "Faltan campos por rellenar"));
+        return;
+    }
+
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
@@ -82,6 +100,11 @@ function updateHotel($conex){
     } else {
         if($adminStatus["admin"] == 1){
             
+            if(empty($hotel["nombre"]) || empty($hotel["ubicacion"]) || empty($hotel["valoracion"]) || empty($hotel["id"])){
+                echo json_encode(array("error" => "Faltan campos por rellenar"));
+                return;
+            }
+
             $updateHotel = $conex->prepare("UPDATE hoteles SET nombre = :nombre, valoracion = :valoracion, ubicacion = :ubicacion WHERE id = :id;");
 
             $updateHotel->bindParam(":nombre", $hotel["nombre"]);
@@ -93,9 +116,11 @@ function updateHotel($conex){
             if($updateHotel->execute() != 0){
                 $conex->commit();
                 echo json_encode(array("success" => "Hotel actualizado correctamente"));
+                return;
             } else {
                 $conex->rollBack();
                 echo json_encode(array("error" => "Error al actualizar el hotel"));
+                return;
             }
 
         } else {
@@ -108,6 +133,11 @@ function updateHotel($conex){
 function deleteById($conex){
     $input = json_decode(file_get_contents('php://input'), true);
     
+    if(!isset($input["usuario"]) || !isset($input["hotel"])){
+        echo json_encode(array("error" => "Faltan campos por rellenar"));
+        return;
+    }
+
     $usuario = $input["usuario"];
     $hotel = $input["hotel"];
 
@@ -116,6 +146,11 @@ function deleteById($conex){
         return;
     } else {
         if($adminStatus["admin"] == 1){
+
+            if(empty($hotel["id"])){
+                echo json_encode(array("error" => "Faltan campos por rellenar"));
+                return;
+            }
             
             $deleteHotel = $conex->prepare("DELETE FROM hoteles WHERE id = :id;");
 
@@ -125,9 +160,11 @@ function deleteById($conex){
             if($deleteHotel->execute() != 0){
                 $conex->commit();
                 echo json_encode(array("success" => "Hotel eliminado correctamente"));
+                return;
             } else {
                 $conex->rollBack();
                 echo json_encode(array("error" => "Error al eliminar el hotel"));
+                return;
             }
 
         } else {

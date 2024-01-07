@@ -1,5 +1,5 @@
 <?php
-include("conexion.php");
+include_once("conexion.php");
 $conex = conectarBd();
 
 switch ($_SERVER['REQUEST_METHOD']) {
@@ -19,66 +19,61 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
 function getReservas($conex)
 {
-
     global $conex;
-    $ok = false;
     $input = json_decode(file_get_contents('php://input'), true);
-    $idUsuario = $input['idUsuario'];
-
-    $sql = "SELECT * from usuarios where id = ?";
-    $result = $conex->prepare($sql);
-    $result->bindParam(1, $idUsuario);
-    $result->execute();
-    $row = $result->fetch(PDO::FETCH_ASSOC);
-    if ($row["Admin"] == "1") {
-        $ok = true;
-    }else{
-        $ok = false;
-        echo json_encode(array('message' => 'No tienes permisos para actualizar habitaciones'));
-    }
-
-    $sql = 'SELECT * from reservas';
-    global $conex;
-    $result = $conex->query($sql);
-    $arrayPrin = array();
-    $array = array();
-
-    if ($ok) {
-        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-            $array["cliente"] = $row["Cliente"];
-            $array["habitacion"] = $row["Habitacion"];
-            $array["fDesde"] = $row["FDesde"];
-            $array["fHasta"] = $row["FHasta"];
-            $arrayPrin[$row["id"]] = $array;
-        }
-        echo json_encode($arrayPrin);
+    if (isset($input['usuario']['id'])) {
+        $usuario = $input['usuario'];
     } else {
-        echo json_encode(array('message' => 'No tienes permisos para actualizar habitaciones'));
+        echo json_encode(array('message' => 'No se ha proporcionado un usuario'));
+        return;
     }
+
+
+    if (($adminStatus = getAdminStatusUser($conex, $usuario)) == false) {
+        return json_encode(array("error" => "Error al obtener el estado de administrador del usuario"));
+    } else {
+        if ($adminStatus["admin"] == 1) {
+            $sql = 'SELECT * from reservas';
+            global $conex;
+            $result = $conex->query($sql);
+            $array = array();
+            $arrayPrin = array();
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                $array = $row;
+                array_push($arrayPrin, $array);
+            }
+            echo json_encode($arrayPrin);
+            return;
+        } else {
+            echo json_encode(array("error" => "El usuario no es administrador"));
+            return;
+        }
+    }
+
 }
 
 function updateReservas($conex)
 {
     global $conex;
-    $ok = false;
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = $input['id'];
-    $fDesde = $input['fDesde'];
-    $fHasta = $input['fHasta'];
-    
-    $sqlCheckeaFecha = "SELECT * from reservas where fDesde = ? <= fHasta AND fDesde <= fHasta = ?";
+
+    if (!isset($input['reserva']['id']) || !isset($input['reserva']['fDesde']) || !isset($input['reserva']['fHasta'])) {
+        echo json_encode(array('message' => 'No se ha proporcionado todos los datos necesarios'));
+        return;
+    }
+
+    $id = $input['reserva']['id'];
+    $fDesde = $input['reserva']['fDesde'];
+    $fHasta = $input['reserva']['fHasta'];
+
+    $sqlCheckeaFecha = "SELECT * from reservas where ? <= fHasta AND fDesde <= ?";
     $result = $conex->prepare($sqlCheckeaFecha);
     $result->bindParam(1, $fDesde);
     $result->bindParam(2, $fHasta);
     $result->execute();
     $row = $result->fetch(PDO::FETCH_ASSOC);
-    if($row->rowCount() == 0){
-        $ok = true;
-    }else{
-        $ok = false;
-        echo json_encode(array('message' => 'La fecha de reserva no esta disponible'));
-    }
-    if ($ok) {
+
+    if (empty($row)) {
         $insertReserva = $conex->prepare("UPDATE reservas SET FDesde = ?, FHasta = ? WHERE id = ?");
         $insertReserva->bindParam(1, $fDesde);
         $insertReserva->bindParam(2, $fHasta);
@@ -87,37 +82,42 @@ function updateReservas($conex)
         if ($insertReserva->execute() != 0) {
             $conex->commit();
             echo json_encode(array('message' => 'Reserva actualizada'));
+            return;
         } else {
             $conex->rollback();
             echo json_encode(array('message' => 'Error al actualizar reserva'));
+            return;
         }
     } else {
-        echo json_encode(array('message' => 'Error al actualizar reserva'));
+        echo json_encode(array('message' => 'La fecha de reserva no esta disponible'));
+        return;
     }
 }
 
 function insertReservas($conex)
 {
     global $conex;
-    $ok = false;
     $input = json_decode(file_get_contents('php://input'), true);
-    $cliente = $input['cliente'];
-    $habitacion = $input['habitacion'];
-    $fDesde = $input['fDesde'];
-    $fHasta = $input['fHasta'];
+    if(!isset($input['reserva']['cliente']) || !isset($input['reserva']['habitacion']) || !isset($input['reserva']['fDesde']) || !isset($input['reserva']['fHasta'])){
+        echo json_encode(array('message' => 'No se ha proporcionado todos los datos necesarios'));
+        return;
+    }
+
+    $cliente = $input['reserva']['cliente'];
+    $habitacion = $input['reserva']['habitacion'];
+    $fDesde = $input['reserva']['fDesde'];
+    $fHasta = $input['reserva']['fHasta'];
 
 
-    $sqlCheckeaFecha = "SELECT * from reservas where fDesde = ? <= fHasta AND fDesde <= fHasta = ?";
+    $sqlCheckeaFecha = "SELECT * from reservas where ? <= fHasta AND fDesde <= ?";
     $result = $conex->prepare($sqlCheckeaFecha);
     $result->bindParam(1, $fDesde);
     $result->bindParam(2, $fHasta);
     $result->execute();
     $row = $result->fetch(PDO::FETCH_ASSOC);
-    if($row->rowCount() == 0){
-        $ok = true;
-    }else{
-        $ok = false;
+    if (!empty($row)) {
         echo json_encode(array('message' => 'La fecha de reserva no esta disponible'));
+        return;
     }
 
 
@@ -125,67 +125,35 @@ function insertReservas($conex)
     $sqlCompruebaHabitacion = "SELECT * FROM habitaciones WHERE id = $habitacion";
     $result = $conex->query($sqlCompruebaHabitacion);
     $resultado = $result->fetch(PDO::FETCH_ASSOC);
-    if ($resultado['id'] == $habitacion) {
-        $ok = true;
-    } else {
-        $ok = false;
+    if (empty($resultado)) {
         echo json_encode(array('message' => 'La habitacion no existe'));
+        return;
     }
-
-
-    //Comprueba si la habitacion esta ocupada
-    $sqlCompruebaHabitacion = "SELECT * FROM habitaciones WHERE Tipo = $habitacion";
-    $result = $conex->query($sqlCompruebaHabitacion);
-    $resultado = $result->fetch(PDO::FETCH_ASSOC);
-    //Si esta ocupada no se puede reservar
-    if ($resultado['Ocupado'] == '1') {
-        $ok = false;
-        echo json_encode(array('message' => 'No se puede reservar la habitacion seleccionada porque ya esta ocupada'));
-    } else {
-        $ok = true;
-    }
-
     //Comprobacion de que el usuario existe y cliente es el correcto dentro de nuestra base de datos
     $sqlCompruebaCliente = "SELECT * FROM clientes WHERE id = $cliente";
     $result = $conex->query($sqlCompruebaCliente);
     $resultado = $result->fetch(PDO::FETCH_ASSOC);
-    if ($resultado['id'] == $cliente) {
-        $ok = true;
-    } else {
-        $ok = false;
+    if (empty($resultado)) {
         echo json_encode(array('message' => 'El cliente no existe'));
+        return;
     }
 
 
     //Insercion de la reserva
-    if ($ok) {
-        $insertReserva = $conex->prepare("INSERT INTO reservas (Cliente, Habitacion, FDesde, FHasta) VALUES (?, ?, ?, ?)");
-        $insertReserva->bindParam(1, $cliente);
-        $insertReserva->bindParam(2, $habitacion);
-        $insertReserva->bindParam(3, $fDesde);
-        $insertReserva->bindParam(4, $fHasta);
-        $conex->beginTransaction();
-        if ($insertReserva->execute() != 0) {
-            $conex->commit();
-            echo json_encode(array('message' => 'Reserva realizada'));
-        } else {
-            $conex->rollback();
-            echo json_encode(array('message' => 'Error al realizar reserva'));
-        }
-
-        //Actualiza el campo ocupado de la habitacion a 1
-        $updateHabitacion = $conex->prepare("UPDATE habitaciones SET Ocupado = 1 WHERE id = ?");
-        $updateHabitacion->bindParam(1, $habitacion);
-        $conex->beginTransaction();
-        if ($updateHabitacion->execute() != 0) {
-            $conex->commit();
-            echo json_encode(array('message' => 'Habitacion actualizada'));
-        } else {
-            $conex->rollback();
-            echo json_encode(array('message' => 'Error al actualizar habitacion'));
-        }
+    $insertReserva = $conex->prepare("INSERT INTO reservas (Cliente, Habitacion, FDesde, FHasta) VALUES (?, ?, ?, ?)");
+    $insertReserva->bindParam(1, $cliente);
+    $insertReserva->bindParam(2, $habitacion);
+    $insertReserva->bindParam(3, $fDesde);
+    $insertReserva->bindParam(4, $fHasta);
+    $conex->beginTransaction();
+    if ($insertReserva->execute() != 0) {
+        $conex->commit();
+        echo json_encode(array('message' => 'Reserva realizada'));
+        return;
     } else {
+        $conex->rollback();
         echo json_encode(array('message' => 'Error al realizar reserva'));
+        return;
     }
 }
 
@@ -193,41 +161,26 @@ function deleteReservas($conex)
 {
     global $conex;
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = $input['id'];
-    $ok = true;
-    //Elimina la reserva y actualiza el campo ocupado de la habitacion a 0 para que se pueda volver a reservar
-    if ($ok) {
 
-        $insertOpinion = $conex->prepare("DELETE FROM reservas WHERE id = ?");
-        $insertOpinion->bindParam(1, $id);
-        $conex->beginTransaction();
-        if ($insertOpinion->execute() != 0) {
-            $conex->commit();
-            echo json_encode(array('message' => 'Reserva eliminada'));
-        } else {
-            $conex->rollback();
-            echo json_encode(array('message' => 'Error al eliminar Reserva'));
-        }
+    if (!isset($input['reserva']['id'])) {
+        echo json_encode(array('message' => 'No se ha proporcionado todos los datos necesarios'));
+        return;
+    }
 
-        //Actualiza el campo ocupado de la habitacion a 0
-        $sqlCompruebaHabitacion = "SELECT * FROM reservas WHERE id = $id";
-        $result = $conex->query($sqlCompruebaHabitacion);
-        $resultado = $result->fetch(PDO::FETCH_ASSOC);
-        $habitacion = $resultado['Habitacion'];
-        $updateHabitacion = $conex->prepare("UPDATE habitaciones SET Ocupado = 0 WHERE id = ?");
-        $updateHabitacion->bindParam(1, $habitacion);
-        $conex->beginTransaction();
-        if ($updateHabitacion->execute() != 0) {
-            $conex->commit();
-            echo json_encode(array('message' => 'Habitacion actualizada'));
-        } else {
-            $conex->rollback();
-            echo json_encode(array('message' => 'Error al actualizar habitacion'));
-        }
+    $id = $input['reserva']['id'];
 
-       
+    //Elimina la reserva
+    $insertOpinion = $conex->prepare("DELETE FROM reservas WHERE id = ?");
+    $insertOpinion->bindParam(1, $id);
+    $conex->beginTransaction();
+    if ($insertOpinion->execute() != 0) {
+        $conex->commit();
+        echo json_encode(array('message' => 'Reserva eliminada'));
+        return;
     } else {
+        $conex->rollback();
         echo json_encode(array('message' => 'Error al eliminar Reserva'));
+        return;
     }
 
 }

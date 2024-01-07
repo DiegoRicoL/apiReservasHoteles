@@ -50,7 +50,6 @@ DROP TABLE IF EXISTS `habitaciones`;
 CREATE TABLE `habitaciones` (
   `id` int(11) NOT NULL,
   `Hotel` int(11) NOT NULL,
-  `Ocupado` tinyint(1) NOT NULL DEFAULT 0,
   `Tipo` enum('Individual','Doble','Triple','Quad','Queen','King','Duplex','Doble-doble','Estudio','Suite') NOT NULL,
   `Camas` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_spanish_ci;
@@ -58,9 +57,6 @@ CREATE TABLE `habitaciones` (
 --
 -- Volcado de datos para la tabla `habitaciones`
 --
-
-INSERT INTO `habitaciones` (`id`, `Hotel`, `Ocupado`, `Tipo`, `Camas`) VALUES
-(2, 1, 1, 'Individual', 2);
 
 -- --------------------------------------------------------
 
@@ -80,9 +76,6 @@ ALTER TABLE `hoteles` ADD UNIQUE(`Nombre`);
 --
 -- Volcado de datos para la tabla `hoteles`
 --
-
-INSERT INTO `hoteles` (`id`, `Nombre`, `Valoracion`, `Ubicacion`) VALUES
-(1, 'PacoHotel', 5, 'Valencia');
 
 -- --------------------------------------------------------
 
@@ -191,13 +184,13 @@ ALTER TABLE `clientes`
 -- AUTO_INCREMENT de la tabla `habitaciones`
 --
 ALTER TABLE `habitaciones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `hoteles`
 --
 ALTER TABLE `hoteles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `opinion`
@@ -215,7 +208,7 @@ ALTER TABLE `reservas`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
@@ -259,8 +252,8 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 INSERT INTO `hoteles` (`id`, `Nombre`, `Valoracion`, `Ubicacion`) VALUES (NULL, 'OnlyYou', '7', 'Valencia');
-INSERT INTO `habitaciones` (`id`, `Hotel`, `Ocupado`, `Tipo`, `Camas`) VALUES (NULL, '1', '0', 'Individual', '1');
-INSERT INTO `habitaciones` (`id`, `Hotel`, `Ocupado`, `Tipo`, `Camas`) VALUES (NULL, '1', '0', 'Individual', '1');
+INSERT INTO `habitaciones` (`id`, `Hotel`, `Tipo`, `Camas`) VALUES (NULL, '1', 'Individual', '1');
+INSERT INTO `habitaciones` (`id`, `Hotel`, `Tipo`, `Camas`) VALUES (NULL, '1', 'Individual', '1');
 INSERT INTO `clientes` (`id`, `Habitacion`, `Nombre`, `Apellidos`, `numTLF`, `mail`) VALUES (NULL, '1', 'AdminPacoSi', 'paquito', '53534543', 'paquito@gmail.com');
 INSERT INTO `usuarios` (`id`, `Nombre`, `contrasena`, `Admin`, `Cliente`) VALUES (NULL, 'PaquitoAdmin', 'paquito', '1', '1');
 INSERT INTO `clientes` (`id`, `Habitacion`, `Nombre`, `Apellidos`, `numTLF`, `mail`) VALUES (NULL, '2', 'NoAdminJose', 'Josete', '645646', 'jose@gmail.com');
